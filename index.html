@@ -1,0 +1,220 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grhek AMPrem ID</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 30px 16px;
+      font-family: Arial, sans-serif;
+      background: #090911;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 45px auto;
+    }
+
+    .brand {
+      text-align: center;
+      color: #a78bfa;
+      font-size: 13px;
+      letter-spacing: 3px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 36px;
+      margin: 15px 0;
+    }
+
+    h1 span { color: #a78bfa; }
+
+    .subtitle {
+      text-align: center;
+      color: #a1a1b5;
+      line-height: 1.7;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      padding: 24px;
+      background: #141421;
+      border: 1px solid #302b49;
+      border-radius: 18px;
+      margin-bottom: 18px;
+    }
+
+    h2 { font-size: 19px; }
+
+    label {
+      display: block;
+      margin: 17px 0 8px;
+      font-size: 13px;
+      color: #d5d0e9;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      background: #090911;
+      color: white;
+      border: 1px solid #39354c;
+      border-radius: 10px;
+      outline: none;
+    }
+
+    input:focus { border-color: #a78bfa; }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 18px;
+      border: none;
+      border-radius: 10px;
+      background: #8b5cf6;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover { background: #7542e8; }
+
+    .notice {
+      color: #aaa6bd;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    #result {
+      margin-top: 15px;
+      color: #c4b5fd;
+      overflow-wrap: anywhere;
+      font-size: 13px;
+    }
+
+    footer {
+      text-align: center;
+      color: #77748c;
+      font-size: 11px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div class="brand">GRHEK • AM TOOLS</div>
+
+    <h1>Grhek <span>AMPrem ID</span></h1>
+
+    <p class="subtitle">
+      Alight Motion workflow panel.<br>
+      Pilih fitur yang ingin kamu gunakan.
+    </p>
+
+    <section class="card">
+      <h2>01. AM Premium Sender</h2>
+      <p class="notice">
+        Masukkan email akun milikmu untuk memulai alur pengiriman.
+      </p>
+
+      <form id="senderForm">
+        <label for="senderEmail">Alamat email</label>
+        <input
+          id="senderEmail"
+          type="email"
+          placeholder="nama@gmail.com"
+          autocomplete="email"
+          required
+        >
+        <button type="submit">Kirim permintaan</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>02. AM Premium Verifier</h2>
+      <p class="notice">
+        Masukkan email dan tautan verifikasi yang kamu terima.
+      </p>
+
+      <form id="verifyForm">
+        <label for="verifyEmail">Alamat email</label>
+        <input
+          id="verifyEmail"
+          type="email"
+          placeholder="nama@gmail.com"
+          autocomplete="email"
+          required
+        >
+
+        <label for="verifyLink">Tautan verifikasi</label>
+        <input
+          id="verifyLink"
+          type="url"
+          placeholder="https://..."
+          required
+        >
+
+        <button type="submit">Verifikasi akun</button>
+      </form>
+    </section>
+
+    <div class="card">
+      <p class="notice">
+        Status: antarmuka siap. Backend belum terhubung.
+        Form ini belum mengirim permintaan ke API.
+        Jangan masukkan password atau kode OTP.
+      </p>
+      <div id="result" role="status"></div>
+    </div>
+
+    <footer>
+      © 2026 GRHEK AMPREM ID
+    </footer>
+  </main>
+
+  <script>
+    const result = document.getElementById("result");
+
+    document.getElementById("senderForm")
+      .addEventListener("submit", function(event) {
+        event.preventDefault();
+        const email = document.getElementById("senderEmail").value.trim();
+        result.textContent =
+          "Email valid: " + email +
+          ". Backend belum terhubung; belum ada permintaan dikirim.";
+      });
+
+    document.getElementById("verifyForm")
+      .addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const email = document.getElementById("verifyEmail").value.trim();
+        const link = document.getElementById("verifyLink").value.trim();
+
+        try {
+          const url = new URL(link);
+
+          if (!["https:", "http:"].includes(url.protocol)) {
+            throw new Error("Tautan tidak valid");
+          }
+
+          result.textContent =
+            "Input valid untuk " + email +
+            ". Backend belum terhubung; belum ada verifikasi dikirim.";
+        } catch {
+          result.textContent =
+            "Tautan tidak valid. Gunakan URL HTTP atau HTTPS.";
+        }
+      });
+  </script>
+</body>
+</html>
