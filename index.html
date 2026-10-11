@@ -182,39 +182,74 @@
   </main>
 
   <script>
-    const result = document.getElementById("result");
+    
+<script>
+  const result = document.getElementById("result");
 
-    document.getElementById("senderForm")
-      .addEventListener("submit", function(event) {
-        event.preventDefault();
-        const email = document.getElementById("senderEmail").value.trim();
-        result.textContent =
-          "Email valid: " + email +
-          ". Backend belum terhubung; belum ada permintaan dikirim.";
+  async function sendRequest(endpoint, payload, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = "Memproses...";
+    result.textContent = "";
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
       });
 
-    document.getElementById("verifyForm")
-      .addEventListener("submit", function(event) {
-        event.preventDefault();
+      const data = await response.json();
 
-        const email = document.getElementById("verifyEmail").value.trim();
-        const link = document.getElementById("verifyLink").value.trim();
+      result.textContent = data.message ||
+        (response.ok ? "Permintaan selesai." : "Permintaan gagal.");
 
-        try {
-          const url = new URL(link);
+      if (!response.ok) {
+        result.textContent += " (HTTP " + response.status + ")";
+      }
+    } catch (error) {
+      result.textContent =
+        "Gagal menghubungi backend. Coba lagi sebentar.";
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
 
-          if (!["https:", "http:"].includes(url.protocol)) {
-            throw new Error("Tautan tidak valid");
-          }
+  document.getElementById("senderForm")
+    .addEventListener("submit", function(event) {
+      event.preventDefault();
 
-          result.textContent =
-            "Input valid untuk " + email +
-            ". Backend belum terhubung; belum ada verifikasi dikirim.";
-        } catch {
-          result.textContent =
-            "Tautan tidak valid. Gunakan URL HTTP atau HTTPS.";
-        }
-      });
+      const email = document
+        .getElementById("senderEmail").value.trim();
+
+      sendRequest(
+        "/api/send",
+        { email },
+        this.querySelector('button[type="submit"]')
+      );
+    });
+
+  document.getElementById("verifyForm")
+    .addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const email = document
+        .getElementById("verifyEmail").value.trim();
+
+      const link = document
+        .getElementById("verifyLink").value.trim();
+
+      sendRequest(
+        "/api/verify",
+        { email, link },
+        this.querySelector('button[type="submit"]')
+      );
+    });
+</script>
+
   </script>
 </body>
 </html>
