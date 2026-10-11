@@ -1,5 +1,5 @@
 
-module.exports = (req, res) => {
+module.exports = async (req, res) => {
   res.setHeader("Content-Type", "application/json");
 
   if (req.method !== "POST") {
@@ -21,34 +21,69 @@ module.exports = (req, res) => {
     });
   }
 
-  let parsedUrl;
-
+  let parsedLink;
   try {
-    parsedUrl = new URL(link);
+    parsedLink = new URL(link);
   } catch {
     return res.status(400).json({
       status: false,
-      message: "Tautan tidak valid."
+      message: "Format tautan tidak valid."
     });
   }
 
-  if (
-    parsedUrl.protocol !== "https:" ||
-    !parsedUrl.hostname.includes(".")
-  ) {
+  if (parsedLink.protocol !== "https:") {
     return res.status(400).json({
       status: false,
-      message: "Gunakan tautan HTTPS yang valid."
+      message: "Tautan harus menggunakan HTTPS."
     });
   }
 
-  return res.status(200).json({
-    status: true,
-    demo: true,
-    message: "Input diterima. Verifier masih dalam mode demo.",
-    data: {
+  const akseskey = process.env.AM_API_KEY;
+  if (!akseskey) {
+    return res.status(500).json({
+      status: false,
+      message: "API key belum dikonfigurasi di Vercel."
+    });
+  }
+
+  try {
+    const params = new URLSearchParams({
+      akseskey,
       email,
-      type: "demo"
+      link
+    });
+
+    const response = await fetch(
+      `https://ndxhs.my.id/alightmotion/verify?${params}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || data?.status !== true) {
+      return res.status(502).json({
+        status: false,
+        message: data?.message || "Verifikasi gagal."
+      });
     }
-  });
+
+    const duration = data.data?.duration || "";
+    const durationText = duration === "1_year"
+      ? "1 Tahun"
+      : duration.replaceAll("_", " ");
+
+    return res.status(200).json({
+      status: true,
+      message: data.message || "Verifikasi berhasil!",
+      data: {
+        email: data.data?.email || email,
+        type: data.data?.type || "success",
+        duration: durationText
+      }
+    });
+  } catch {
+    return res.status(502).json({
+      status: false,
+      message: "Layanan Verifier tidak dapat dihubungi."
+    });
+  }
 };
