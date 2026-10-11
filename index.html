@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090911">
   <title>Grhek AMPrem ID</title>
+
   <style>
     * { box-sizing: border-box; }
 
@@ -88,6 +90,11 @@
 
     button:hover { background: #7542e8; }
 
+    button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
     .notice {
       color: #aaa6bd;
       font-size: 12px;
@@ -98,7 +105,9 @@
       margin-top: 15px;
       color: #c4b5fd;
       overflow-wrap: anywhere;
+      white-space: pre-wrap;
       font-size: 13px;
+      line-height: 1.6;
     }
 
     footer {
@@ -109,6 +118,7 @@
     }
   </style>
 </head>
+
 <body>
   <main class="container">
     <div class="brand">GRHEK • AM TOOLS</div>
@@ -133,6 +143,7 @@
           type="email"
           placeholder="nama@gmail.com"
           autocomplete="email"
+          maxlength="254"
           required
         >
         <button type="submit">Kirim permintaan</button>
@@ -152,6 +163,7 @@
           type="email"
           placeholder="nama@gmail.com"
           autocomplete="email"
+          maxlength="254"
           required
         >
 
@@ -160,6 +172,7 @@
           id="verifyLink"
           type="url"
           placeholder="https://..."
+          maxlength="2048"
           required
         >
 
@@ -167,89 +180,105 @@
       </form>
     </section>
 
-    <div class="card">
+    <section class="card">
       <p class="notice">
-        Status: antarmuka siap. Backend belum terhubung.
-        Form ini belum mengirim permintaan ke API.
+        Status: backend demo.
+        Form mengirim input ke endpoint Vercel.
+        Belum mengirim email atau mengaktifkan Premium.
         Jangan masukkan password atau kode OTP.
       </p>
-      <div id="result" role="status"></div>
-    </div>
+      <div id="result" role="status" aria-live="polite"></div>
+    </section>
 
-    <footer>
-      © 2026 GRHEK AMPREM ID
-    </footer>
+    <footer>© 2026 GRHEK AMPREM ID</footer>
   </main>
 
   <script>
-    
-<script>
-  const result = document.getElementById("result");
+    const result = document.getElementById("result");
 
-  async function sendRequest(endpoint, payload, button) {
-    const originalText = button.textContent;
-    button.disabled = true;
-    button.textContent = "Memproses...";
-    result.textContent = "";
+    async function sendRequest(endpoint, payload, button) {
+      const originalText = button.textContent;
 
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
+      button.disabled = true;
+      button.textContent = "Memproses...";
+      result.textContent = "";
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        result.textContent =
+          data.message ||
+          (response.ok
+            ? "Permintaan selesai."
+            : "Permintaan gagal.");
+
+        if (!response.ok) {
+          result.textContent += " (HTTP " + response.status + ")";
+        }
+      } catch (error) {
+        result.textContent =
+          "Gagal menghubungi backend. Periksa koneksi atau deployment Vercel.";
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
+    document.getElementById("senderForm")
+      .addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const email = document
+          .getElementById("senderEmail")
+          .value.trim();
+
+        sendRequest(
+          "/api/send",
+          { email },
+          this.querySelector('button[type="submit"]')
+        );
       });
 
-      const data = await response.json();
+    document.getElementById("verifyForm")
+      .addEventListener("submit", function(event) {
+        event.preventDefault();
 
-      result.textContent = data.message ||
-        (response.ok ? "Permintaan selesai." : "Permintaan gagal.");
+        const email = document
+          .getElementById("verifyEmail")
+          .value.trim();
 
-      if (!response.ok) {
-        result.textContent += " (HTTP " + response.status + ")";
-      }
-    } catch (error) {
-      result.textContent =
-        "Gagal menghubungi backend. Coba lagi sebentar.";
-    } finally {
-      button.disabled = false;
-      button.textContent = originalText;
-    }
-  }
+        const link = document
+          .getElementById("verifyLink")
+          .value.trim();
 
-  document.getElementById("senderForm")
-    .addEventListener("submit", function(event) {
-      event.preventDefault();
+        let parsedUrl;
 
-      const email = document
-        .getElementById("senderEmail").value.trim();
+        try {
+          parsedUrl = new URL(link);
 
-      sendRequest(
-        "/api/send",
-        { email },
-        this.querySelector('button[type="submit"]')
-      );
-    });
+          if (parsedUrl.protocol !== "https:") {
+            throw new Error("HTTPS required");
+          }
+        } catch {
+          result.textContent =
+            "Tautan tidak valid. Masukkan URL HTTPS yang benar.";
+          return;
+        }
 
-  document.getElementById("verifyForm")
-    .addEventListener("submit", function(event) {
-      event.preventDefault();
-
-      const email = document
-        .getElementById("verifyEmail").value.trim();
-
-      const link = document
-        .getElementById("verifyLink").value.trim();
-
-      sendRequest(
-        "/api/verify",
-        { email, link },
-        this.querySelector('button[type="submit"]')
-      );
-    });
-</script>
-
+        sendRequest(
+          "/api/verify",
+          { email, link },
+          this.querySelector('button[type="submit"]')
+        );
+      });
   </script>
 </body>
 </html>
